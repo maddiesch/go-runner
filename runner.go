@@ -11,7 +11,7 @@ import (
 )
 
 type Runner struct {
-	run     Runnable
+	process Process
 	stopped context.CancelFunc
 	started bool
 	signal  []os.Signal
@@ -21,10 +21,11 @@ type Runner struct {
 	hooks   *eventBusHook
 }
 
-func New(r Runnable) *Runner {
+// Create a new "Process" runner instance.
+func New(p Process) *Runner {
 	return &Runner{
-		run:    r,
-		signal: []os.Signal{os.Interrupt},
+		process: p,
+		signal:  []os.Signal{os.Interrupt},
 		hooks: &eventBusHook{
 			Bus: bus.New[*busEvent](),
 		},
@@ -72,11 +73,11 @@ func (r *Runner) Start(ctx context.Context) error {
 
 	wg.Wait()
 
-	if hooker, ok := r.run.(RunnableHook); ok {
+	if hooker, ok := r.process.(ProcessHook); ok {
 		hooker.RegisterRunnerHook(r.hooks)
 	}
 
-	return r.run.Start(rCtx)
+	return r.process.Start(rCtx)
 }
 
 func (r *Runner) Stop(ctx context.Context) error {
@@ -88,7 +89,7 @@ func (r *Runner) Stop(ctx context.Context) error {
 
 	r.workers.Wait()
 
-	return r.run.Stop(ctx)
+	return r.process.Stop(ctx)
 }
 
 func (r *Runner) Wait() <-chan Status {

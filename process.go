@@ -2,13 +2,13 @@ package runner
 
 import "context"
 
-type Runnable interface {
+type Process interface {
 	Start(context.Context) error
 	Stop(context.Context) error
 }
 
-type RunnableHook interface {
-	Runnable
+type ProcessHook interface {
+	Process
 
 	RegisterRunnerHook(Hook)
 }
